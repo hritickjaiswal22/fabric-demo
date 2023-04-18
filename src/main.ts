@@ -1,5 +1,6 @@
 import "./style.css";
 import { fabric } from "fabric";
+import { ACTIONS } from "./actions";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
@@ -19,8 +20,8 @@ const canvas = new fabric.Canvas("canvas", {
   width: 800,
   height: 600,
 });
-const objectList: any = {};
-const stack: { type: string; oldObj: any }[] = [];
+const stack: { type: string; obj: any }[] = [];
+let oldStateObj = {};
 
 canvas.on("object:modified", objectModifyHandler);
 document.getElementById("addRect")?.addEventListener("click", addRect);
@@ -28,31 +29,12 @@ document.getElementById("addCircle")?.addEventListener("click", addCircle);
 document.getElementById("addText")?.addEventListener("click", addText);
 document.getElementById("undo")?.addEventListener("click", undo);
 document.getElementById("showList")?.addEventListener("click", () => {
-  console.log(objectList);
+  console.log(stack);
 });
-
-function objectModifyHandler(evt: any) {
-  const newObj = evt.target;
-  const id = newObj.id;
-  const oldObj = objectList[id];
-
-  stack.push({
-    type: "modification",
-    oldObj: oldObj,
-  });
-
-  newObj.clone(function (cloned: any) {
-    objectList[id] = Object.assign(cloned, { id });
-  });
-}
 
 function attachId(obj: any) {
   const id = crypto.randomUUID();
   const newObj = Object.assign(obj, { id });
-
-  newObj.clone(function (cloned: any) {
-    objectList[id] = Object.assign(cloned, { id });
-  });
 
   return newObj;
 }
@@ -61,12 +43,33 @@ function undo() {
   if (stack.length) {
     const lastChange = stack.pop();
     const index = canvas._objects.findIndex(
-      (object) => object.id === lastChange?.oldObj.id
+      (object) => object.id === lastChange?.obj.id
     );
+    lastChange?.obj.on("mousedown", mouseDownHandler);
 
     canvas._objects.splice(index, 1);
-    canvas.add(lastChange?.oldObj);
+    canvas.add(lastChange?.obj);
     canvas.renderAll();
+  }
+}
+
+function mouseDownHandler(evt: any) {
+  const obj = evt.target;
+  const id = obj.id;
+
+  console.log(obj);
+
+  obj.clone(function (cloned: any) {
+    oldStateObj = Object.assign(cloned, { id });
+  });
+}
+
+function objectModifyHandler(evt: any) {
+  if (evt.target.id === oldStateObj.id) {
+    stack.push({
+      type: ACTIONS.modification,
+      obj: oldStateObj,
+    });
   }
 }
 
@@ -82,6 +85,7 @@ function addRect() {
   });
 
   attachId(rect);
+  rect.on("mousedown", mouseDownHandler);
 
   canvas.add(rect);
   canvas.renderAll();
@@ -98,6 +102,7 @@ function addCircle() {
   });
 
   attachId(circle);
+  circle.on("mousedown", mouseDownHandler);
 
   canvas.add(circle);
   canvas.renderAll();
@@ -114,6 +119,7 @@ function addText() {
   });
 
   attachId(textbox);
+  textbox.on("mousedown", mouseDownHandler);
 
   canvas.add(textbox);
 }
