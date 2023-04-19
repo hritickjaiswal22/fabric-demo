@@ -7,11 +7,15 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <article class="container">
       <canvas id="canvas"></canvas>
 
-      <button id="addRect">Add Rect</button>
-      <button id="addCircle">Add Circle</button>
-      <button id="addText">Add Text</button>
-      <button id="undo">Undo</button>
-      <button id="showList">Show List</button>
+      <section class="btnContainer">
+        <button id="addRect">Add Rect</button>
+        <button id="addCircle">Add Circle</button>
+        <button id="addText">Add Text</button>
+        <button id="toGreen">To Green</button>
+        <button id="toBlue">To Blue</button>
+        <button id="undo">Undo</button>
+        <button id="showList">Show List</button>
+      </section>
     </article>
   </div>
 `;
@@ -27,6 +31,8 @@ canvas.on("object:modified", objectModifyHandler);
 document.getElementById("addRect")?.addEventListener("click", addRect);
 document.getElementById("addCircle")?.addEventListener("click", addCircle);
 document.getElementById("addText")?.addEventListener("click", addText);
+document.getElementById("toGreen")?.addEventListener("click", toGreen);
+document.getElementById("toBlue")?.addEventListener("click", toBlue);
 document.getElementById("undo")?.addEventListener("click", undo);
 document.getElementById("showList")?.addEventListener("click", () => {
   console.log(stack);
@@ -122,4 +128,26 @@ function addText() {
   textbox.on("mousedown", mouseDownHandler);
 
   canvas.add(textbox);
+}
+
+function toBlue() {
+  canvas.getActiveObject()?.clone(function (cloned: any) {
+    stack.push({
+      type: ACTIONS.modification,
+      obj: cloned,
+    });
+  });
+  canvas.getActiveObject()?.set("fill", "blue");
+  canvas.renderAll();
+}
+
+function toGreen() {
+  canvas.getActiveObject()?.clone(function (cloned: any) {
+    stack.push({
+      type: ACTIONS.modification,
+      obj: cloned,
+    });
+  });
+  canvas.getActiveObject()?.set("fill", "green");
+  canvas.renderAll();
 }
