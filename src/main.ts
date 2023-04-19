@@ -11,6 +11,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
         <button id="addRect">Add Rect</button>
         <button id="addCircle">Add Circle</button>
         <button id="addText">Add Text</button>
+        <input type="file" id="uploadImage" />
         <button id="toGreen">To Green</button>
         <button id="toBlue">To Blue</button>
         <button id="undo">Undo</button>
@@ -31,6 +32,7 @@ canvas.on("object:modified", objectModifyHandler);
 document.getElementById("addRect")?.addEventListener("click", addRect);
 document.getElementById("addCircle")?.addEventListener("click", addCircle);
 document.getElementById("addText")?.addEventListener("click", addText);
+document.getElementById("uploadImage")?.addEventListener("change", uploadImage);
 document.getElementById("toGreen")?.addEventListener("click", toGreen);
 document.getElementById("toBlue")?.addEventListener("click", toBlue);
 document.getElementById("undo")?.addEventListener("click", undo);
@@ -128,6 +130,35 @@ function addText() {
   textbox.on("mousedown", mouseDownHandler);
 
   canvas.add(textbox);
+}
+
+function addImage(url: string) {
+  const canvasRef = canvas;
+
+  fabric.Image.fromURL(url, function (myImg) {
+    //i create an extra var for to change some image properties
+    const img1 = myImg.set({
+      top: canvasRef.height / 2,
+      left: canvasRef.width / 2,
+      originX: "center",
+      originY: "center",
+    });
+    attachId(img1);
+    img1.on("mousedown", mouseDownHandler);
+    canvasRef.add(img1);
+  });
+}
+
+function uploadImage(event: any) {
+  if (event?.target?.files[0]) {
+    const reader = new FileReader();
+    reader.readAsDataURL(event?.target?.files[0]);
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result || "";
+
+      addImage(imageUrl);
+    };
+  }
 }
 
 function toBlue() {
