@@ -50,14 +50,30 @@ function attachId(obj: any) {
 function undo() {
   if (stack.length) {
     const lastChange = stack.pop();
-    const index = canvas._objects.findIndex(
-      (object) => object.id === lastChange?.obj.id
-    );
-    lastChange?.obj.on("mousedown", mouseDownHandler);
 
-    canvas._objects.splice(index, 1);
-    canvas.add(lastChange?.obj);
-    canvas.renderAll();
+    switch (lastChange?.type) {
+      case ACTIONS.colorChange:
+        const targetObj = canvas._objects.find(
+          (object) => object.id === lastChange.obj.id
+        );
+        targetObj?.set("fill", lastChange.obj.originalColor);
+        canvas.renderAll();
+        break;
+
+      case ACTIONS.modification:
+        const index = canvas._objects.findIndex(
+          (object) => object.id === lastChange?.obj.id
+        );
+        lastChange?.obj.on("mousedown", mouseDownHandler);
+
+        canvas._objects.splice(index, 1);
+        canvas.add(lastChange?.obj);
+        canvas.renderAll();
+        break;
+
+      default:
+        break;
+    }
   }
 }
 
@@ -162,23 +178,31 @@ function uploadImage(event: any) {
 }
 
 function toBlue() {
-  canvas.getActiveObject()?.clone(function (cloned: any) {
+  const activeObject = canvas.getActiveObject();
+  if (activeObject) {
     stack.push({
-      type: ACTIONS.modification,
-      obj: cloned,
+      type: ACTIONS.colorChange,
+      obj: {
+        id: activeObject.id,
+        originalColor: activeObject?.fill,
+      },
     });
-  });
-  canvas.getActiveObject()?.set("fill", "blue");
-  canvas.renderAll();
+    activeObject?.set("fill", "blue");
+    canvas.renderAll();
+  }
 }
 
 function toGreen() {
-  canvas.getActiveObject()?.clone(function (cloned: any) {
+  const activeObject = canvas.getActiveObject();
+  if (activeObject) {
     stack.push({
-      type: ACTIONS.modification,
-      obj: cloned,
+      type: ACTIONS.colorChange,
+      obj: {
+        id: activeObject.id,
+        originalColor: activeObject?.fill,
+      },
     });
-  });
-  canvas.getActiveObject()?.set("fill", "green");
-  canvas.renderAll();
+    activeObject?.set("fill", "green");
+    canvas.renderAll();
+  }
 }
