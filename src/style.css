@@ -12,6 +12,19 @@
   align-items: center;
 }
 
+#outer {
+  overflow: hidden;
+  position: relative;
+}
+
+#inner {
+  position: absolute;
+  height: 1000px;
+  width: 1000px;
+  right: -500000px;
+  top: 50px;
+}
+
 #canvas {
   width: 80%;
   height: 600px;

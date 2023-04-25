@@ -1,11 +1,17 @@
 import "./style.css";
 import { fabric } from "fabric";
 import { ACTIONS } from "./actions";
+import Cropper from "cropperjs";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
     <article class="container">
       <canvas id="canvas"></canvas>
+
+      <div id="outer">
+        <div id="inner">
+        </div>
+      </div>
 
       <section class="btnContainer">
         <button id="addRect">Add Rect</button>
@@ -16,12 +22,15 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
         <button id="toBlue">To Blue</button>
         <button id="undo">Undo</button>
         <button id="showList">Show List</button>
+        <button id="startCrop">Start Crop</button>
+        <button id="endCrop">End Crop</button>
       </section>
     </article>
+    <main id="test"></main>
   </div>
 `;
 
-const canvas = new fabric.Canvas("canvas", {
+let canvas = new fabric.Canvas("canvas", {
   width: 800,
   height: 600,
 });
@@ -39,6 +48,8 @@ document.getElementById("undo")?.addEventListener("click", undo);
 document.getElementById("showList")?.addEventListener("click", () => {
   console.log(stack);
 });
+document.getElementById("startCrop")?.addEventListener("click", startCrop);
+document.getElementById("endCrop")?.addEventListener("click", endCrop);
 
 function attachId(obj: any) {
   const id = crypto.randomUUID();
@@ -81,7 +92,7 @@ function mouseDownHandler(evt: any) {
   const obj = evt.target;
   const id = obj.id;
 
-  console.log(obj);
+  // console.log(obj);
 
   obj.clone(function (cloned: any) {
     oldStateObj = Object.assign(cloned, { id });
@@ -205,4 +216,151 @@ function toGreen() {
     activeObject?.set("fill", "green");
     canvas.renderAll();
   }
+}
+
+// let clipRect: any;
+// let image: any;
+
+// function startCrop() {
+//   image = canvas.getActiveObject();
+// }
+
+// function clipRectModifyHandler(evt: any) {
+//   console.log(evt);
+// }
+
+// function endCrop() {
+//   const clipPath = clipRect;
+//   const canvasRef = canvas;
+
+//   fabric.Image.fromURL(image?._element.src, function (myImg) {
+//     //i create an extra var for to change some image properties
+//     const img1 = myImg.set({
+//       top: canvasRef.height / 2,
+//       left: canvasRef.width / 2,
+//     });
+
+//     img1.clipPath = new fabric.Rect({
+//       width: 200,
+//       height: 100,
+//     });
+//     canvasRef.remove(image);
+
+//     canvasRef.add(img1);
+//   });
+// }
+
+// let cropArea = fabric.Rect;
+
+// function endCrop() {
+//   const cropBounds = canvas.getActiveObject()?.getBoundingRect();
+//   // Create a new canvas element with the same dimensions as the crop area
+//   const croppedCanvas = document.createElement("canvas");
+//   croppedCanvas.width = cropBounds?.width || 0;
+//   croppedCanvas.height = cropBounds?.height || 0;
+
+//   const imageData = canvas
+//     .getContext()
+//     .getImageData(
+//       cropBounds.left,
+//       cropBounds.top,
+//       cropBounds.width,
+//       cropBounds.height
+//     );
+
+//   // Draw the image data onto the new canvas
+
+//   const ctx = croppedCanvas.getContext("2d");
+//   ctx.putImageData(imageData, 0, 0);
+
+//   canvas.getElement().replaceWith(croppedCanvas);
+//   canvas = new fabric.Canvas(croppedCanvas);
+// }
+
+// function startCrop() {
+//   fabric.Image.fromURL(canvas.toDataURL("png"), function (img) {
+//     img.set({
+//       scaleX: 1,
+//       scaleY: 1,
+//       width: canvas.width,
+//       height: canvas.height,
+//     });
+
+//     const canvasSrc = img?._element.src;
+//     const imgElement = document.createElement("img");
+//     imgElement.src = canvasSrc;
+
+//     imgElement.onload = () => {
+//       document.getElementById("test")?.appendChild(imgElement);
+//     };
+//   });
+// }
+
+function startCrop() {
+  if (canvas.getActiveObject()?.type === "image") {
+    const image = canvas.getActiveObject();
+    const rect = new fabric.Rect({
+      top: canvas.height / 2,
+      left: canvas.width / 2,
+      width: 100,
+      height: 100,
+      fill: "red",
+      originX: "center",
+      originY: "center",
+      opacity: 0.3,
+    });
+
+    canvas.add(rect);
+    canvas.setActiveObject(rect);
+
+    canvas.renderAll();
+  }
+}
+
+function endCrop() {
+  const rect = canvas?.getActiveObject();
+  const bounds = rect?.getBoundingRect();
+  const canvasRef = canvas;
+
+  fabric.Image.fromURL(canvas.toDataURL("png"), function (img) {
+    img.set({
+      scaleX: 1,
+      scaleY: 1,
+      width: canvas.width,
+      height: canvas.height,
+    });
+
+    const canvasSrc = img?._element.src;
+    const imgElement = document.createElement("img");
+    imgElement.src = canvasSrc;
+
+    imgElement.onload = () => {
+      document.getElementById("inner")?.appendChild(imgElement);
+      const cropper = new Cropper(
+        document.getElementById("inner")?.querySelector("img"),
+        {
+          ready: () => {
+            cropper.setCropBoxData({
+              left: bounds?.left,
+              top: bounds?.top + 50,
+              width: bounds?.width,
+              height: bounds?.height + 50,
+            });
+            const croppedCanvasUrl = cropper.getCroppedCanvas().toDataURL();
+            fabric.Image.fromURL(croppedCanvasUrl, function (myImg) {
+              //i create an extra var for to change some image properties
+              const img1 = myImg.set({
+                top: canvasRef.height / 2,
+                left: canvasRef.width / 2,
+                originX: "center",
+                originY: "center",
+              });
+
+              canvasRef.add(img1);
+            });
+          },
+        }
+      );
+    };
+  });
 }
