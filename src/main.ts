@@ -296,9 +296,12 @@ function toGreen() {
 //   });
 // }
 
+let selectedImage: any;
+
 function startCrop() {
   if (canvas.getActiveObject()?.type === "image") {
     const image = canvas.getActiveObject();
+    selectedImage = image;
     const rect = new fabric.Rect({
       top: canvas.height / 2,
       left: canvas.width / 2,
@@ -356,7 +359,13 @@ function endCrop() {
                 originY: "center",
               });
 
+              canvasRef.remove(selectedImage);
+              canvasRef.remove(rect);
+              document.getElementById("inner")?.querySelector("img")?.remove();
+              document.querySelector(".cropper-container")?.remove();
+
               canvasRef.add(img1);
+              canvasRef.setActiveObject(img1);
             });
           },
         }
