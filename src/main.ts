@@ -307,10 +307,11 @@ function startCrop() {
       left: canvas.width / 2,
       width: 100,
       height: 100,
-      fill: "red",
       originX: "center",
       originY: "center",
-      opacity: 0.3,
+      fill: "transparent", // Set the fill color to transparent
+      strokeWidth: 1, // Set the border width
+      stroke: "black",
     });
 
     canvas.add(rect);
@@ -342,12 +343,14 @@ function endCrop() {
       const cropper = new Cropper(
         document.getElementById("inner")?.querySelector("img"),
         {
+          cropBoxResizable: false,
+          cropBoxMovable: false,
           ready: () => {
-            cropper.setCropBoxData({
-              left: bounds?.left,
-              top: bounds?.top + 50,
+            cropper.setData({
+              x: bounds?.left,
+              y: bounds?.top,
               width: bounds?.width,
-              height: bounds?.height + 50,
+              height: bounds?.height,
             });
             const croppedCanvasUrl = cropper.getCroppedCanvas().toDataURL();
             fabric.Image.fromURL(croppedCanvasUrl, function (myImg) {
