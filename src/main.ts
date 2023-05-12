@@ -28,6 +28,23 @@ const canvas = new fabric.Canvas("canvas", {
 const stack: { type: string; obj: any }[] = [];
 let oldStateObj = {};
 
+interface RectType {
+  object: fabric.Rect | null;
+  origX: number | null;
+  origY: number | null;
+}
+
+let drawRect: boolean = false;
+const rect: RectType = {
+  object: null,
+  origX: null,
+  origY: null,
+};
+
+canvas.on("mouse:down", startRect);
+canvas.on("mouse:move", dragRect);
+canvas.on("mouse:up", endRect);
+
 canvas.on("object:modified", objectModifyHandler);
 document.getElementById("addRect")?.addEventListener("click", addRect);
 document.getElementById("addCircle")?.addEventListener("click", addCircle);
@@ -98,21 +115,55 @@ function objectModifyHandler(evt: any) {
 }
 
 function addRect() {
-  const rect = new fabric.Rect({
-    top: canvas.height / 2,
-    left: canvas.width / 2,
-    width: 100,
-    height: 100,
-    fill: "red",
-    originX: "center",
-    originY: "center",
-  });
+  drawRect = true;
+}
 
-  attachId(rect);
-  rect.on("mousedown", mouseDownHandler);
+function startRect(o) {
+  if (drawRect) {
+    const pointer = canvas.getPointer(o.e);
+    rect.origX = pointer.x;
+    rect.origY = pointer.y;
+    rect.object = new fabric.Rect({
+      left: rect.origX,
+      top: rect.origY,
+      originX: "left",
+      originY: "top",
+      width: pointer.x - rect.origX,
+      height: pointer.y - rect.origY,
+      angle: 0,
+      fill: "rgba(255,0,0,0.5)",
+      transparentCorners: false,
+    });
+    canvas.add(rect.object);
+  }
+}
 
-  canvas.add(rect);
-  canvas.renderAll();
+function dragRect(o) {
+  if (drawRect && rect.object) {
+    const pointer = canvas.getPointer(o.e);
+
+    if (rect.origX > pointer.x) {
+      rect.object.set({ left: Math.abs(pointer.x) });
+    }
+    if (rect.origY > pointer.y) {
+      rect.object.set({ top: Math.abs(pointer.y) });
+    }
+
+    rect.object.set({ width: Math.abs(rect.origX - pointer.x) });
+    rect.object.set({ height: Math.abs(rect.origY - pointer.y) });
+
+    canvas.renderAll();
+  }
+}
+
+function endRect() {
+  if (drawRect) {
+    drawRect = false;
+    rect.object?.setCoords();
+    rect.object = null;
+    rect.origX = null;
+    rect.origY = null;
+  }
 }
 
 function addCircle() {
