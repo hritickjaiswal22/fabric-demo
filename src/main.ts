@@ -28,14 +28,21 @@ const canvas = new fabric.Canvas("canvas", {
 const stack: { type: string; obj: any }[] = [];
 let oldStateObj = {};
 
-interface RectType {
-  object: fabric.Rect | null;
+interface ShapeType<T> {
+  object: T | null;
   origX: number | null;
   origY: number | null;
 }
 
 let drawRect: boolean = false;
-const rect: RectType = {
+const rect: ShapeType<fabric.Rect> = {
+  object: null,
+  origX: null,
+  origY: null,
+};
+
+let drawCirc: boolean = false;
+const circ: ShapeType<fabric.Circle> = {
   object: null,
   origX: null,
   origY: null,
@@ -44,6 +51,10 @@ const rect: RectType = {
 canvas.on("mouse:down", startRect);
 canvas.on("mouse:move", dragRect);
 canvas.on("mouse:up", endRect);
+
+canvas.on("mouse:down", startCirc);
+canvas.on("mouse:move", dragCirc);
+canvas.on("mouse:up", endCirc);
 
 canvas.on("object:modified", objectModifyHandler);
 document.getElementById("addRect")?.addEventListener("click", addRect);
@@ -167,20 +178,51 @@ function endRect() {
 }
 
 function addCircle() {
-  const circle = new fabric.Circle({
-    top: canvas.height / 2,
-    left: canvas.width / 2,
-    radius: 50,
-    fill: "red",
-    originX: "center",
-    originY: "center",
-  });
+  drawCirc = true;
+}
 
-  attachId(circle);
-  circle.on("mousedown", mouseDownHandler);
+function startCirc(o) {
+  if (drawCirc) {
+    const pointer = canvas.getPointer(o.e);
 
-  canvas.add(circle);
-  canvas.renderAll();
+    circ.origX = pointer.x;
+    circ.origY = pointer.y;
+
+    circ.object = new fabric.Circle({
+      left: pointer.x,
+      fill: "",
+      originX: "center",
+      originY: "center",
+      radius: 10,
+      stroke: "red",
+      strokeWidth: 2,
+      top: pointer.y,
+    });
+
+    canvas.add(circ.object);
+  }
+}
+
+function dragCirc(o) {
+  if (drawCirc && circ.object) {
+    const pointer = canvas.getPointer(o.e);
+
+    circ.object.set({
+      radius: Math.abs(circ.origX - pointer.x),
+    });
+
+    canvas.renderAll();
+  }
+}
+
+function endCirc() {
+  if (drawCirc) {
+    drawCirc = false;
+    circ.object?.setCoords();
+    circ.object = null;
+    circ.origX = null;
+    circ.origY = null;
+  }
 }
 
 function addText() {
