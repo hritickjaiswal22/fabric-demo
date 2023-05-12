@@ -10,6 +10,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       <section class="btnContainer">
         <button id="addRect">Add Rect</button>
         <button id="addCircle">Add Circle</button>
+        <button id="addEllipse">Add Elps</button>
         <button id="addText">Add Text</button>
         <input type="file" id="uploadImage" />
         <button id="toGreen">To Green</button>
@@ -48,6 +49,13 @@ const circ: ShapeType<fabric.Circle> = {
   origY: null,
 };
 
+let drawElps: boolean = false;
+const elps: ShapeType<fabric.Ellipse> = {
+  object: null,
+  origX: null,
+  origY: null,
+};
+
 canvas.on("mouse:down", startRect);
 canvas.on("mouse:move", dragRect);
 canvas.on("mouse:up", endRect);
@@ -56,9 +64,14 @@ canvas.on("mouse:down", startCirc);
 canvas.on("mouse:move", dragCirc);
 canvas.on("mouse:up", endCirc);
 
+canvas.on("mouse:down", startElps);
+canvas.on("mouse:move", dragElps);
+canvas.on("mouse:up", endElps);
+
 canvas.on("object:modified", objectModifyHandler);
 document.getElementById("addRect")?.addEventListener("click", addRect);
 document.getElementById("addCircle")?.addEventListener("click", addCircle);
+document.getElementById("addEllipse")?.addEventListener("click", addEllipse);
 document.getElementById("addText")?.addEventListener("click", addText);
 document.getElementById("uploadImage")?.addEventListener("change", uploadImage);
 document.getElementById("toGreen")?.addEventListener("click", toGreen);
@@ -222,6 +235,58 @@ function endCirc() {
     circ.object = null;
     circ.origX = null;
     circ.origY = null;
+  }
+}
+
+function addEllipse() {
+  drawElps = true;
+}
+
+function startElps(o) {
+  if (drawElps) {
+    const pointer = canvas.getPointer(o.e);
+    elps.origX = pointer.x;
+    elps.origY = pointer.y;
+    elps.object = new fabric.Ellipse({
+      left: elps.origX,
+      top: elps.origY,
+      originX: "left",
+      originY: "top",
+      rx: pointer.x - elps.origX,
+      ry: pointer.y - elps.origY,
+      angle: 0,
+      fill: "rgba(255,0,0,0.5)",
+      transparentCorners: false,
+    });
+    canvas.add(elps.object);
+  }
+}
+
+function dragElps(o) {
+  if (drawElps && elps.object) {
+    const pointer = canvas.getPointer(o.e);
+
+    if (elps.origX > pointer.x) {
+      elps.object.set({ left: Math.abs(pointer.x) });
+    }
+    if (elps.origY > pointer.y) {
+      elps.object.set({ top: Math.abs(pointer.y) });
+    }
+
+    elps.object.set({ rx: Math.abs(elps.origX - pointer.x) });
+    elps.object.set({ ry: Math.abs(elps.origY - pointer.y) });
+
+    canvas.renderAll();
+  }
+}
+
+function endElps() {
+  if (drawElps) {
+    drawElps = false;
+    elps.object?.setCoords();
+    elps.object = null;
+    elps.origX = null;
+    elps.origY = null;
   }
 }
 
