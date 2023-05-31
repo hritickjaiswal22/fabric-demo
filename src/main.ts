@@ -12,6 +12,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
         <button id="addCircle">Add Circle</button>
         <button id="addEllipse">Add Elps</button>
         <button id="addText">Add Text</button>
+        <button id="comment">Comment</button>
         <input type="file" id="uploadImage" />
         <button id="toGreen">To Green</button>
         <button id="toBlue">To Blue</button>
@@ -68,7 +69,10 @@ canvas.on("mouse:down", startElps);
 canvas.on("mouse:move", dragElps);
 canvas.on("mouse:up", endElps);
 
+canvas.on("mouse:down", putComment);
+
 canvas.on("object:modified", objectModifyHandler);
+document.getElementById("comment")?.addEventListener("click", addComment);
 document.getElementById("addRect")?.addEventListener("click", addRect);
 document.getElementById("addCircle")?.addEventListener("click", addCircle);
 document.getElementById("addEllipse")?.addEventListener("click", addEllipse);
@@ -135,6 +139,86 @@ function objectModifyHandler(evt: any) {
       type: ACTIONS.modification,
       obj: oldStateObj,
     });
+  }
+}
+
+// function positionComment(img: fabric.Image, text: fabric.Textbox) {
+//   text.left = (img.left || 0) + 40;
+//   text.top = img.top || 0;
+// }
+
+function preventResizing(obj: fabric.Object) {
+  obj.setControlsVisibility({
+    mt: false,
+    mb: false,
+    ml: false,
+    mr: false,
+    bl: false,
+    br: false,
+    tl: false,
+    tr: false,
+    mtr: false,
+  });
+
+  return obj;
+}
+
+let commentMode = false;
+function addComment() {
+  commentMode = true;
+}
+
+function putComment(o) {
+  if (commentMode) {
+    commentMode = false;
+    const pointer = canvas.getPointer(o.e);
+    const origX = pointer.x;
+    const origY = pointer.y;
+
+    fabric.Image.fromURL(
+      "../public/user-default.svg",
+      (myImg: fabric.Image) => {
+        const img1 = myImg.set({
+          top: origY,
+          left: origX,
+          cornerStyle: "circle",
+          transparentCorners: false,
+          padding: 1,
+          borderColor: "#0B57D0",
+          cornerColor: "#0B57D0",
+          cornerStrokeColor: "white",
+          cornerSize: 15,
+        });
+
+        const textbox = new fabric.Textbox("Add Comment", {
+          lockMovementX: true,
+          lockMovementY: true,
+          top: origY,
+          left: origX + 40,
+          fontFamily: "Arial",
+          fontSize: 15,
+          width: 150,
+          splitByGrapheme: true,
+          cornerStyle: "circle",
+          transparentCorners: false,
+          padding: 1,
+          borderColor: "#0B57D0",
+          cornerColor: "#0B57D0",
+          cornerStrokeColor: "white",
+          cornerSize: 15,
+        });
+
+        img1.on("moving", (event) => {
+          // console.log(event);
+          textbox.left = (event.transform?.target.left || 0) + 40;
+          textbox.top = event.transform?.target.top;
+          textbox.setCoords();
+        });
+
+        canvas.add(preventResizing(img1));
+        canvas.add(preventResizing(textbox));
+      }
+    );
   }
 }
 
@@ -364,3 +448,70 @@ function toGreen() {
     canvas.renderAll();
   }
 }
+
+// function positionDiv(obj) {
+//   // commentContainerRef.style.left = obj.left + 500 / 2 + "px";
+//   // commentContainerRef.style.top = obj.top - 2 / 2 + "px";
+
+//   commentContainerRef.style.left = obj.left + 500 + "px";
+//   commentContainerRef.style.top = obj.top + "px";
+// }
+
+// let commentContainerRef = null;
+
+// function addComment() {
+//   let createdImg: null | fabric.Image = null;
+
+//   const commentContainer = document.createElement("div");
+//   const img = document.createElement("img");
+//   const textContainer = document.createElement("div");
+//   const h5 = document.createElement("h5");
+//   const textarea = document.createElement("textarea");
+//   textarea.id = "textarea";
+//   textarea.placeholder = "Add comment here";
+//   textarea.rows = 2;
+
+//   commentContainer.id = "commentContainer";
+//   img.src = "../public/demo.jpg";
+//   textContainer.id = "textContainer";
+//   h5.innerText = "The User";
+
+//   textContainer.appendChild(h5);
+//   textContainer.appendChild(textarea);
+//   commentContainer.appendChild(img);
+//   commentContainer.appendChild(textContainer);
+//   document.querySelector("body")?.appendChild(commentContainer);
+
+//   commentContainerRef = commentContainer;
+
+//   fabric.Image.fromURL("../public/demo.jpg", (img: fabric.Image) => {
+//     createdImg = img;
+//     img.setControlsVisibility({
+//       mt: false,
+//       mb: false,
+//       ml: false,
+//       mr: false,
+//       bl: false,
+//       br: false,
+//       tl: false,
+//       tr: false,
+//       mtr: false,
+//     });
+//     canvas.add(
+//       img
+//         .set({
+//           left: canvas.width / 2,
+//           top: canvas.height / 2,
+//         })
+//         .scale(0.15)
+//     );
+
+//     img.on("moving", function () {
+//       positionDiv(img);
+//     });
+//     img.on("scaling", function () {
+//       positionDiv(img);
+//     });
+//     positionDiv(img);
+//   });
+// }
