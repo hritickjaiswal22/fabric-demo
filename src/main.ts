@@ -215,6 +215,11 @@ function putComment(o) {
           textbox.setCoords();
         });
 
+        img1.on("mousedblclick", () => {
+          textbox.visible = !textbox.visible;
+          canvas.renderAll();
+        });
+
         canvas.add(preventResizing(img1));
         canvas.add(preventResizing(textbox));
       }
