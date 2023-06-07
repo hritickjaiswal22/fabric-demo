@@ -82,7 +82,7 @@ document.getElementById("toGreen")?.addEventListener("click", toGreen);
 document.getElementById("toBlue")?.addEventListener("click", toBlue);
 document.getElementById("undo")?.addEventListener("click", undo);
 document.getElementById("showList")?.addEventListener("click", () => {
-  console.log(stack);
+  console.log(canvas._objects);
 });
 
 function attachId(obj: any) {
@@ -219,6 +219,10 @@ function putComment(o) {
           textbox.visible = !textbox.visible;
           canvas.renderAll();
         });
+
+        let id = crypto.randomUUID();
+        Object.assign(img1, { commentImgId: id });
+        Object.assign(textbox, { commentTextId: id });
 
         canvas.add(preventResizing(img1));
         canvas.add(preventResizing(textbox));
